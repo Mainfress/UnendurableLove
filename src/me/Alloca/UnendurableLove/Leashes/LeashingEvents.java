@@ -1,5 +1,6 @@
 package me.Alloca.UnendurableLove.Leashes;
 
+import com.bergerkiller.bukkit.common.events.EntityRemoveEvent;
 import me.Alloca.UnendurableLove.UnendurableLove;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -11,6 +12,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -109,27 +111,6 @@ public class LeashingEvents implements Listener
 
     }
 
-    @EventHandler
-    public void onRemoveLeashHitchEvent(PlayerInteractEntityEvent event)
-    {
-        Player owner = event.getPlayer();
-        EquipmentSlot hand = event.getHand();
-
-        if(hand == EquipmentSlot.HAND && event.getRightClicked() instanceof LeashHitch)
-        {
-            List<Entity> couldBeHanged = event.getRightClicked().getNearbyEntities(7.0D, 7.0D, 7.0D);
-            for(Entity entity : couldBeHanged)
-            {
-                CoupleIds couple = searchForMobInCouples(entity);
-                if (couple != null && hangedPets.containsKey(couple.pet()) && couple.owner().equals(owner.getName()))
-                {
-                    hangedPets.remove(couple.pet());
-                    unleashPet(Bukkit.getPlayer(couple.pet()));
-                }
-            }
-        }
-    }
-
     private void unleashPet(Player pet)
     {
         CoupleIds couple = searchForPlayerInCouples(pet);
@@ -193,7 +174,8 @@ public class LeashingEvents implements Listener
         CoupleIds couple = searchForPlayerInCouples(event.getEntity().getPlayer());
         if (couple != null && couple.owner().equals(event.getEntity().getPlayer().getName()))
         {
-            unleashPet(Bukkit.getPlayer(couple.pet()));
+            if(!hangedPets.containsKey(couple.pet()))
+                unleashPet(Bukkit.getPlayer(couple.pet()));
         }
     }
 
@@ -203,41 +185,57 @@ public class LeashingEvents implements Listener
         CoupleIds couple = searchForPlayerInCouples(event.getPlayer());
         if (couple != null && couple.owner().equals(event.getPlayer().getName()))
         {
-            unleashPet(Bukkit.getPlayer(couple.pet()));
-        }
-    }
-
-    @EventHandler
-    public void onHangingPlaceEvent(HangingPlaceEvent event)
-    {
-        List<Entity> couldBeHanged = event.getEntity().getNearbyEntities(7.0D, 7.0D, 7.0D);
-        for(Entity entity : couldBeHanged)
-        {
-            CoupleIds couple = searchForMobInCouples(entity);
-            if (couple != null && event.getPlayer().getName().equals(couple.owner()))
-                hangedPets.put(couple.pet(), event.getBlock().getLocation());
-        }
-    }
-
-    @EventHandler
-    public void onHangingBreakEvent(HangingBreakEvent event)
-    {
-        List<Entity> couldBeHanged = event.getEntity().getNearbyEntities(7.0D, 7.0D, 7.0D);
-        for(Entity entity : couldBeHanged)
-        {
-            CoupleIds couple = searchForMobInCouples(entity);
-            if (couple != null && hangedPets.containsKey(couple.pet()))
-            {
-                hangedPets.remove(couple.pet());
+            if(!hangedPets.containsKey(couple.pet()))
                 unleashPet(Bukkit.getPlayer(couple.pet()));
+        }
+    }
+
+    @EventHandler
+    public void onPetJoinEvent(PlayerJoinEvent event)
+    {
+        CoupleIds couple = searchForPlayerInCouples(event.getPlayer());
+        if(couple != null && couple.pet().equals(event.getPlayer().getName()))
+            ((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(Bukkit.getPlayer(couple.owner()));
+    }
+    @EventHandler
+    public void onPetQuitEvent(PlayerQuitEvent event)
+    {
+        CoupleIds couple = searchForPlayerInCouples(event.getPlayer());
+        if(couple != null && couple.pet().equals(event.getPlayer().getName()))
+            ((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(null);
+    }
+
+    @EventHandler
+    public void onLeashHitchPlaceEvent(HangingPlaceEvent event)
+    {
+        if(event.getEntity() instanceof LeashHitch)
+        {
+            List<Entity> couldBeHanged = event.getEntity().getNearbyEntities(7.0D, 7.0D, 7.0D);
+            for (Entity entity : couldBeHanged)
+            {
+                CoupleIds couple = searchForMobInCouples(entity);
+                if (couple != null && event.getPlayer().getName().equals(couple.owner()))
+                    hangedPets.put(couple.pet(), event.getBlock().getLocation());
             }
         }
     }
 
     @EventHandler
-    public void onHangingBreakByEntityEvent(HangingBreakEvent event)
+    public void onLeashHitchRemoveEvent(EntityRemoveEvent event)
     {
-        onHangingBreakEvent(event);
+        if(event.getEntity() instanceof LeashHitch)
+        {
+            List<Entity> couldBeHanged = event.getEntity().getNearbyEntities(7.0D, 7.0D, 7.0D);
+            for (Entity entity : couldBeHanged)
+            {
+                CoupleIds couple = searchForMobInCouples(entity);
+                if (couple != null)
+                {
+                    hangedPets.remove(couple.pet());
+                    unleashPet(Bukkit.getPlayer(couple.pet()));
+                }
+            }
+        }
     }
 }
 
@@ -261,9 +259,6 @@ class LeashMechanic extends BukkitRunnable
     {
         if (!allCouples.contains(coupleToProcess))
             this.cancel();
-
-        for(CoupleIds cp : allCouples)
-            Bukkit.getLogger().info(cp.owner() + cp.pet());
 
         Player owner = Bukkit.getPlayer(coupleToProcess.owner());
         Player pet = Bukkit.getPlayer(coupleToProcess.pet());
