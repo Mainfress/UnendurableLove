@@ -4,3 +4,8 @@ author: Alloca
 main: me.Alloca.UnendurableLove.UnendurableLove
 api-version: 1.18 # the version of the API you want to use, required starting with 1.13
 softdepend: [BKCommonLib]
+commands:
+  unleash:
+    description: Unleash a pet
+    usage: /<command> [pet]
+    permission: UnendurableLove.Unleashpermission
