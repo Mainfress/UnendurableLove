@@ -43,7 +43,7 @@ public class CollisionBoard {
     {
         for(CollisionTeam itTeam : teams)
         {
-            if(itTeam.getUnderlyingTeam().getName() == entity1 + entity2)
+            if(itTeam.getUnderlyingTeam().getName().equals(entity1 + entity2))
                 return itTeam;
         }
 

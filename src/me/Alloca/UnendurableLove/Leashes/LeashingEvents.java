@@ -2,7 +2,6 @@ package me.Alloca.UnendurableLove.Leashes;
 
 import me.Alloca.UnendurableLove.UnendurableLove;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -11,12 +10,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.checkerframework.checker.units.qual.A;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -64,36 +62,62 @@ public class LeashingEvents implements Listener
         owner = event.getPlayer();
         EquipmentSlot hand = event.getHand();
 
-        if(hand == EquipmentSlot.HAND && event.getRightClicked() instanceof Player &&
-                owner.getInventory().getItemInMainHand().getType() == Material.LEAD)
+        if(hand == EquipmentSlot.HAND && event.getRightClicked() instanceof Player)
         {
             pet = (Player)event.getRightClicked();
 
-            LivingEntity mob = spawnDummyMobOnALeash(owner, pet);
-
-            try
+            if(owner.getInventory().getItemInMainHand().getType() == Material.LEAD)
             {
-                plugin.getBoard().addTeam(pet, mob);
+                CoupleIds coupleToCheck = searchForPlayerInCouples(pet);
+                if(coupleToCheck != null && coupleToCheck.pet() == pet.getName())
+                    return;
+
+                LivingEntity mob = spawnDummyMobOnALeash(owner, pet);
+
+                try
+                {
+                    plugin.getBoard().addTeam(pet, mob);
+                }
+                catch(RuntimeException e)
+                {
+                    Bukkit.getLogger().info(e.getMessage());
+                    return;
+                }
+
+                pet.setScoreboard(plugin.getBoard().getBoard());
+
+                CoupleIds newCouple = new CoupleIds(owner.getName(),pet.getName(),mob.getUniqueId());
+                couplesIds.add(newCouple);
+
+                owner.getInventory().getItemInMainHand().setAmount(owner.getInventory().getItemInMainHand().getAmount() - 1);
+
+                LeashMechanic mechanic = new LeashMechanic(couplesIds,
+                        new CoupleIds(owner.getName(), pet.getName(), mob.getUniqueId()));
+                mechanic.runTaskTimer(this.plugin, 0L, 0L);
             }
-            catch(RuntimeException e)
+            else
             {
-                Bukkit.getLogger().info(e.getMessage());
-                return;
+                unleashPet(pet);
             }
-
-            pet.setScoreboard(plugin.getBoard().getBoard());
-
-            CoupleIds newCouple = new CoupleIds(owner.getName(),pet.getName(),mob.getUniqueId());
-            if(couplesIds.contains(newCouple))
-                return;
-            couplesIds.add(newCouple);
-
-            owner.getInventory().getItemInMainHand().setAmount(owner.getInventory().getItemInMainHand().getAmount() - 1);
-
-            LeashMechanic mechanic = new LeashMechanic(couplesIds,
-                    new CoupleIds(owner.getName(), pet.getName(), mob.getUniqueId()));
-            mechanic.runTaskTimer(this.plugin, 0L, 0L);
         }
+    }
+
+    private void unleashPet(Player pet)
+    {
+        CoupleIds couple = searchForPlayerInCouples(pet);
+        if(couple == null || couple.pet() != pet.getName())
+            return;
+
+        LivingEntity slime = (LivingEntity)Bukkit.getEntity(couple.slime());
+        slime.setLeashHolder(null);
+        slime.remove();
+
+        plugin.getBoard().removeTeam(couple.pet(), couple.slime().toString());
+        couplesIds.remove(couple);
+
+        Player owner = Bukkit.getPlayer(couple.owner());
+        owner.getInventory().addItem(new ItemStack[]{new ItemStack(Material.LEAD)});
+
     }
 
     public List<CoupleIds> getCouplesIds()
@@ -101,7 +125,7 @@ public class LeashingEvents implements Listener
         return couplesIds;
     }
 
-    private CoupleIds SearchForPlayerInCouples(Player player)
+    private CoupleIds searchForPlayerInCouples(Player player)
     {
         for(CoupleIds couple : couplesIds)
         {
@@ -115,7 +139,7 @@ public class LeashingEvents implements Listener
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event)
     {
-        CoupleIds couple = SearchForPlayerInCouples(event.getPlayer());
+        CoupleIds couple = searchForPlayerInCouples(event.getPlayer());
         if (couple != null && couple.pet() == event.getPlayer().getName())
         {
             Player pet = event.getPlayer();
@@ -143,6 +167,9 @@ class LeashMechanic extends BukkitRunnable
     {
         if (!allCouples.contains(coupleToProcess))
             this.cancel();
+
+        for(CoupleIds cp : allCouples)
+            Bukkit.getLogger().info(cp.owner() + cp.pet());
 
         Player owner = Bukkit.getPlayer(coupleToProcess.owner());
         Player pet = Bukkit.getPlayer(coupleToProcess.pet());
