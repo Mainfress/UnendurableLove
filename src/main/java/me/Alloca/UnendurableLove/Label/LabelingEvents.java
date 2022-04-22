@@ -1,5 +1,7 @@
 package me.Alloca.UnendurableLove.Label;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -9,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -17,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-record LabelCouple(String owner, String pet, String label ) {}
+record LabelCouple(String owner, String pet, Component label ) {}
 
 public class LabelingEvents implements Listener
 {
@@ -53,13 +56,13 @@ public class LabelingEvents implements Listener
                 if (coupleToCheck != null)
                     return;
 
-                String tag;
+                Component tag;
+                ItemMeta item = owner.getInventory().getItemInMainHand().getItemMeta();
 
-                boolean didOwnerChooseTag = ownersAndTagsTheyChose.containsKey(owner.getName());
-                if(!didOwnerChooseTag)
-                    tag = MessageFormat.format("{0}`s ",owner.getName());
-                else
-                    tag = ownersAndTagsTheyChose.get(owner.getName());
+                if (ownersAndTagsTheyChose.containsKey(owner.getName()))
+                    tag = Component.text(ownersAndTagsTheyChose.get(owner.getName()));
+                else if (item.hasDisplayName()) tag = item.displayName();
+                else tag = Component.text(MessageFormat.format("{0}`s ",owner.getName()));
 
                 owner.getInventory().getItemInMainHand().setAmount(owner.getInventory().getItemInMainHand().getAmount() - 1);
 
@@ -79,7 +82,7 @@ public class LabelingEvents implements Listener
         }
     }
 
-    private boolean addTagToPlayer(Player player, String tag)
+    private boolean addTagToPlayer(Player player, Component tag)
     {
         Team teamToCheck = tagsScoreboard.getTeams().stream().filter(x -> x.getName().equals(player.getName()))
                 .findFirst().orElse(null);
@@ -87,7 +90,7 @@ public class LabelingEvents implements Listener
             return false;
 
         Team tagTeam = tagsScoreboard.registerNewTeam(player.getName());
-        tagTeam.setPrefix(ChatColor.RED + tag);
+        tagTeam.prefix(tag.color(TextColor.color(255, 0, 0)));
         tagTeam.addEntry(player.getName());
 
         return true;
