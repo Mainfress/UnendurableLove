@@ -1,5 +1,6 @@
 package me.Alloca.UnendurableLove;
 
+import me.Alloca.UnendurableLove.Label.LabelingEvents;
 import me.Alloca.UnendurableLove.Leashes.CollisionBoard;
 import me.Alloca.UnendurableLove.Leashes.CoupleIds;
 import me.Alloca.UnendurableLove.Leashes.LeashingEvents;
@@ -11,10 +12,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.text.MessageFormat;
+
 public class UnendurableLove extends JavaPlugin
 {
     public static UnendurableLove Instance;
     public LeashingEvents LeashEvents;
+    public LabelingEvents LabelEvents;
     private CollisionBoard board;
     @Override
     public void onEnable()
@@ -22,11 +26,14 @@ public class UnendurableLove extends JavaPlugin
         Instance = this;
         board = new CollisionBoard();
         LeashEvents = new LeashingEvents(this);
+        LabelEvents = new LabelingEvents();
 
         Bukkit.getPluginManager().registerEvents(LeashEvents, this);
+        Bukkit.getPluginManager().registerEvents(LabelEvents, this);
         Bukkit.getLogger().info(ChatColor.GREEN + "sosi " + this.getName());
 
         getCommand("unleash").setExecutor(new CommandUnleash());
+        getCommand("chooseTag").setExecutor(new CommandChooseTag());
     }
 
     public CollisionBoard getBoard()
@@ -37,7 +44,6 @@ public class UnendurableLove extends JavaPlugin
 
 class CommandUnleash implements CommandExecutor {
 
-    // This method is called, when somebody uses our command
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
@@ -64,6 +70,28 @@ class CommandUnleash implements CommandExecutor {
                 sender.sendMessage(ChatColor.GREEN + "Pair " + owner.getName() + "-" + petName + " removed");
             else
                 sender.sendMessage(ChatColor.RED + "You haven't put " + petName + " into submission yet");
+        }
+
+        return true;
+    }
+}
+
+class CommandChooseTag implements CommandExecutor {
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    {
+        if (sender instanceof Player owner)
+        {
+            if (args.length == 1)
+            {
+                UnendurableLove.Instance.LabelEvents.addOwnerTag(owner, args[0] + " ");
+                sender.sendMessage(ChatColor.GREEN + MessageFormat.format("{0} is a cute moniker!", args[0]));
+            }
+            else
+            {
+                return false;
+            }
         }
 
         return true;

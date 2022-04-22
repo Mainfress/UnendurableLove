@@ -8,4 +8,8 @@ commands:
   unleash:
     description: Unleash a pet
     usage: /<command> [pet]
-    permission: UnendurableLove.Unleashpermission
+    permission: UnendurableLove.UnleashPermission
+  chooseTag:
+    description: Choose a tag you can label pets
+    usage: /<command> [tag]
+    permission: UnendurableLove.ChooseTagPermission

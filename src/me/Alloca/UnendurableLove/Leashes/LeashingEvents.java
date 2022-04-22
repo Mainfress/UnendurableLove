@@ -70,11 +70,12 @@ public class LeashingEvents implements Listener
         {
             pet = (Player)event.getRightClicked();
 
+            CoupleIds coupleToCheck = couplesIds.stream()
+                    .filter(x -> x.pet().equals(pet.getName()))
+                    .findFirst().orElse(null);
+
             if(owner.getInventory().getItemInMainHand().getType() == Material.LEAD)
             {
-                CoupleIds coupleToCheck = couplesIds.stream()
-                        .filter(x -> x.pet().equals(pet.getName()))
-                        .findFirst().orElse(null);
                 if(coupleToCheck != null)
                     return;
 
@@ -103,6 +104,9 @@ public class LeashingEvents implements Listener
             }
             else
             {
+                if(coupleToCheck == null)
+                    return;
+
                 hangedPets.remove(pet.getName());
                 unleashPet(pet);
             }
