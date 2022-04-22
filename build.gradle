@@ -15,10 +15,15 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
+    maven {
+        name = 'mg-dev'
+        url = 'https://ci.mg-dev.eu/plugin/repository/everything/'
+    }
 }
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT'
+    compileOnly 'com.bergerkiller.bukkit:BKCommonLib:1.18.2-v2-SNAPSHOT'
 }
 
 def targetJavaVersion = 17
