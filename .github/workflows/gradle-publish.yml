@@ -11,9 +11,12 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@v2
       with: { arguments: 'jar' }
+    - name: Generate filename
+      run: |
+        echo "artifact=UnendurableLove-$(git rev-parse --short $GITHUB_SHA).jar" >> $GITHUB_ENV
     - name: Upload JAR
       uses: actions/upload-artifact@v3
       with:
-        name: 'UnendurableLove-${{ github.head_ref }}-${{ github.sha }}.jar'
+        name: '${{ env.artifact }}'
         path: build/libs/*.jar
         if-no-files-found: error
