@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -42,6 +43,7 @@ public class PetSilencers implements Listener {
         meta.setLore(List.of(ChatColor.GRAY + "No pet can talk while wearing this.",
                              ChatColor.GRAY + "*Maybe* it's only for the naughty ones..."));
         result.setItemMeta(meta);
+        result.addEnchantment(Enchantment.BINDING_CURSE, 1);
 
         ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(UnendurableLove.Instance, "pet_silencer_" + model), result);
         recipe.shape(shape);
