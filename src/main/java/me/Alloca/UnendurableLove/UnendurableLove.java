@@ -4,6 +4,8 @@ import me.Alloca.UnendurableLove.Label.LabelingEvents;
 import me.Alloca.UnendurableLove.Leashes.CollisionBoard;
 import me.Alloca.UnendurableLove.Leashes.CoupleIds;
 import me.Alloca.UnendurableLove.Leashes.LeashingEvents;
+import me.Alloca.UnendurableLove.NoTalking.PetSilencers;
+import me.Alloca.UnendurableLove.NoTalking.TalkingEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -19,6 +21,8 @@ public class UnendurableLove extends JavaPlugin
     public static UnendurableLove Instance;
     public LeashingEvents LeashEvents;
     public LabelingEvents LabelEvents;
+    public TalkingEvents TalkingEvents;
+    public PetSilencers Silencers;
     private CollisionBoard board;
     @Override
     public void onEnable()
@@ -27,13 +31,18 @@ public class UnendurableLove extends JavaPlugin
         board = new CollisionBoard();
         LeashEvents = new LeashingEvents(this);
         LabelEvents = new LabelingEvents();
+        TalkingEvents = new TalkingEvents(this);
+        Silencers = new PetSilencers(this);
 
         Bukkit.getPluginManager().registerEvents(LeashEvents, this);
         Bukkit.getPluginManager().registerEvents(LabelEvents, this);
+        Bukkit.getPluginManager().registerEvents(TalkingEvents, this);
+        Bukkit.getPluginManager().registerEvents(Silencers, this);
         Bukkit.getLogger().info(ChatColor.GREEN + "sosi " + this.getName());
 
         getCommand("unleash").setExecutor(new CommandUnleash());
         getCommand("chooseTag").setExecutor(new CommandChooseTag());
+        getCommand("letSpeak").setExecutor(TalkingEvents);
     }
 
     public CollisionBoard getBoard()
