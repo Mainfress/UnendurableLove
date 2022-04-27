@@ -17,3 +17,7 @@ commands:
     description: Let a pet speak
     usage: /<command> [pet]
     permission: UnendurableLove.LetSpeakPermission
+  critunleash:
+    description: Unleash all pets of all owners
+    usage: /<command>
+    permission: UnendurableLove.CritUnleashPermission
