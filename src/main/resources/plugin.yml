@@ -13,3 +13,7 @@ commands:
     description: Choose a tag you can label pets
     usage: /<command> [tag]
     permission: UnendurableLove.ChooseTagPermission
+  letSpeak:
+    description: Let a pet speak
+    usage: /<command> [pet]
+    permission: UnendurableLove.LetSpeakPermission
