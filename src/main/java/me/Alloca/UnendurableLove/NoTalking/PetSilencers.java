@@ -18,32 +18,69 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
+record RegisteredSilencer(int id, String name) {}
+record RegisteredKey(int id, int sid, String name) {}
+
 public class PetSilencers implements Listener {
     private final UnendurableLove plugin;
 
     private final List<Integer> silencerData = new ArrayList<>();
     private final List<Integer> silencerKeys = new ArrayList<>();
 
+    private final List<RegisteredSilencer> silencers = new ArrayList<>();
+    private final List<RegisteredKey> keys = new ArrayList<>();
+
     private static final Material silencerMat = Material.LEATHER_HELMET;
     private static final Material silencerKeyMat = Material.STICK;
+
+    private static final List<String> silencerLore = List.of(
+            ChatColor.GRAY + "No pet can talk while wearing this.",
+            ChatColor.GRAY + "*Maybe* it's only for the naughty ones...");
+
+    private static final List<String> silencerKeyLore = List.of(
+            ChatColor.GRAY + "Right-click to let the bad pet talk again.",
+            ChatColor.GRAY + "Only use if you *really* need to.");
 
     public PetSilencers(UnendurableLove plugin) {
         this.plugin = plugin;
         registerAll();
     }
 
+    public ItemStack createSilencer(int model) {
+        return silencers.stream().filter(s -> s.id() == model).findFirst().map(s -> {
+            ItemStack result = new ItemStack(silencerMat, 1);
+            ItemMeta meta = result.getItemMeta();
+
+            meta.setCustomModelData(model);
+            meta.setDisplayName(s.name());
+            meta.setLore(silencerLore);
+            meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+            meta.addEnchant(Enchantment.DURABILITY, 255, true);
+
+            result.setItemMeta(meta);
+            return result;
+        }).orElse(null);
+    }
+
+    public ItemStack createKey(int model) {
+        return keys.stream().filter(k -> k.id() == model).findFirst().map(k -> {
+            ItemStack result = new ItemStack(silencerKeyMat, 1);
+            ItemMeta meta = result.getItemMeta();
+
+            meta.setCustomModelData(model);
+            meta.setDisplayName(k.name());
+            meta.setLore(silencerKeyLore);
+
+            result.setItemMeta(meta);
+            return result;
+        }).orElse(null);
+    }
+
     private void registerRecipe(int model, String name, String[] shape, Material[] ingredients) {
         silencerData.add(model);
+        silencers.add(new RegisteredSilencer(model, name));
 
-        ItemStack result = new ItemStack(silencerMat, 1);
-        ItemMeta meta = result.getItemMeta();
-
-        meta.setCustomModelData(model);
-        meta.setDisplayName(name);
-        meta.setLore(List.of(ChatColor.GRAY + "No pet can talk while wearing this.",
-                             ChatColor.GRAY + "*Maybe* it's only for the naughty ones..."));
-        result.setItemMeta(meta);
-        result.addEnchantment(Enchantment.BINDING_CURSE, 1);
+        ItemStack result = createSilencer(model);
 
         ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(UnendurableLove.Instance, "pet_silencer_" + model), result);
         recipe.shape(shape);
@@ -54,17 +91,11 @@ public class PetSilencers implements Listener {
         Bukkit.addRecipe(recipe);
     }
 
-    private void registerKeyRecipe(int model, String name, String[] shape, Material[] ingredients) {
+    private void registerKeyRecipe(int model, int sid, String name, String[] shape, Material[] ingredients) {
         silencerKeys.add(model);
+        keys.add(new RegisteredKey(model, sid, name));
 
-        ItemStack result = new ItemStack(silencerKeyMat, 1);
-        ItemMeta meta = result.getItemMeta();
-
-        meta.setCustomModelData(model);
-        meta.setDisplayName(name);
-        meta.setLore(List.of(ChatColor.GRAY + "Right-click to let the bad pet talk again.",
-                             ChatColor.GRAY + "Only use if you *really* need to."));
-        result.setItemMeta(meta);
+        ItemStack result = createKey(model);
 
         ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(UnendurableLove.Instance, "pet_silencer_key_" + model), result);
         recipe.shape(shape);
@@ -79,7 +110,7 @@ public class PetSilencers implements Listener {
         // string-leather-string
         registerRecipe(1984, "Simple Ballgag", new String[] { "ABA" }, new Material[] { Material.STRING, Material.LEATHER });
         // iron-iron / empty-stick
-        registerKeyRecipe(2984, "Ballgag Key", new String[]{ "AA", " B" }, new Material[]{ Material.IRON_INGOT, Material.STICK } );
+        registerKeyRecipe(2984, 1984, "Ballgag Key", new String[]{ "AA", " B" }, new Material[]{ Material.IRON_INGOT, Material.STICK } );
     }
 
     public boolean isSilencer(Material material, ItemMeta meta) {
