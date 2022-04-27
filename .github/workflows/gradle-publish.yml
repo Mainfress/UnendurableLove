@@ -1,0 +1,22 @@
+name: 'Build & Upload JAR'
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with: { java-version: '17', distribution: 'zulu' }
+    - name: Build with Gradle
+      uses: gradle/gradle-build-action@v2
+      with: { arguments: 'jar' }
+    - name: Generate filename
+      run: |
+        echo "artifact=UnendurableLove-$(git rev-parse --short $GITHUB_SHA).jar" >> $GITHUB_ENV
+    - name: Upload JAR
+      uses: actions/upload-artifact@v3
+      with:
+        name: '${{ env.artifact }}'
+        path: build/libs/*.jar
+        if-no-files-found: error
