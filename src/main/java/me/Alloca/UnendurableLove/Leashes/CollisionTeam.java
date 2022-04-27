@@ -29,7 +29,7 @@ public class CollisionTeam
     public boolean equals(Object o)
     {
         if(o instanceof CollisionTeam anotherTeam)
-            return underlyingTeam.getName() == anotherTeam.underlyingTeam.getName();
+            return underlyingTeam.getName().equals(anotherTeam.underlyingTeam.getName());
         else
             return false;
     }

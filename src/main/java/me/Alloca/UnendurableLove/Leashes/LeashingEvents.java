@@ -3,6 +3,7 @@ package me.Alloca.UnendurableLove.Leashes;
 import com.bergerkiller.bukkit.common.events.EntityRemoveEvent;
 import me.Alloca.UnendurableLove.UnendurableLove;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -10,18 +11,20 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class LeashingEvents implements Listener
 {
@@ -38,8 +41,11 @@ public class LeashingEvents implements Listener
         plugin = plug;
     }
 
-    private LivingEntity spawnDummyMobOnALeash(Player owner, Player targetPlayer)
+    private LivingEntity spawnDummyMobOnALeash(String ownerId, String targetPlayerId)
     {
+        Player owner = Bukkit.getPlayer(ownerId);
+        Player targetPlayer = Bukkit.getPlayer(targetPlayerId);
+
         Location location = targetPlayer.getLocation().add(0,1,0);
         //spawn entity far away from the players because it is visible for 0.1 seconds
         Slime slime = (Slime)targetPlayer.getWorld().spawnEntity(location, EntityType.SLIME);
@@ -57,6 +63,17 @@ public class LeashingEvents implements Listener
         slime.setInvulnerable(true);
 
         return slime;
+    }
+
+    private void safelyDespawnDummyMobOnALeash(String pet, UUID slimeId)
+    {
+        LivingEntity slime = (LivingEntity)Bukkit.getEntity(slimeId);
+        if(slime != null)
+        {
+            slime.setLeashHolder(null);
+            slime.remove();
+        }
+        plugin.getBoard().removeTeam(pet, slimeId.toString());
     }
 
     @EventHandler
@@ -79,7 +96,7 @@ public class LeashingEvents implements Listener
                 if(coupleToCheck != null)
                     return;
 
-                LivingEntity mob = spawnDummyMobOnALeash(owner, pet);
+                LivingEntity mob = spawnDummyMobOnALeash(owner.getName(), pet.getName());
 
                 try
                 {
@@ -91,6 +108,9 @@ public class LeashingEvents implements Listener
                     return;
                 }
 
+                /*Objective obj = plugin.getBoard().getBoard().registerNewObjective("test", "dummy");
+                obj.setDisplayName("&b&lTest");
+                obj.setDisplaySlot(DisplaySlot.SIDEBAR);*/
                 pet.setScoreboard(plugin.getBoard().getBoard());
 
                 CoupleIds newCouple = new CoupleIds(owner.getName(),pet.getName(),mob.getUniqueId());
@@ -98,8 +118,7 @@ public class LeashingEvents implements Listener
 
                 owner.getInventory().getItemInMainHand().setAmount(owner.getInventory().getItemInMainHand().getAmount() - 1);
 
-                LeashMechanic mechanic = new LeashMechanic(couplesIds, hangedPets,
-                        new CoupleIds(owner.getName(), pet.getName(), mob.getUniqueId()));
+                LeashMechanic mechanic = new LeashMechanic(couplesIds, hangedPets, owner.getName(), pet.getName());
                 mechanic.runTaskTimer(this.plugin, 0L, 0L);
             }
             else
@@ -127,11 +146,8 @@ public class LeashingEvents implements Listener
         if(couple == null)
             return false;
 
-        LivingEntity slime = (LivingEntity)Bukkit.getEntity(couple.slime());
-        slime.setLeashHolder(null);
-        slime.remove();
+        safelyDespawnDummyMobOnALeash(couple.pet(), couple.slime());
 
-        plugin.getBoard().removeTeam(couple.pet(), couple.slime().toString());
         boolean result = couplesIds.remove(couple);
 
         Player owner = Bukkit.getPlayer(couple.owner());
@@ -151,6 +167,19 @@ public class LeashingEvents implements Listener
         return hangedPets;
     }
 
+    private boolean teleportSlimeToPet(String petId, UUID slimeId)
+    {
+        Player pet = Bukkit.getPlayer(petId);
+        Entity slime = Bukkit.getEntity(slimeId);
+
+        if(pet == null || slime == null)
+            return false;
+
+        slime.teleport(pet.getLocation().add(0.0D, 1.0D, 0.0D));
+
+        return true;
+    }
+
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event)
     {
@@ -158,14 +187,28 @@ public class LeashingEvents implements Listener
                 filter(x -> x.pet().equals(event.getPlayer().getName())).findFirst().orElse(null);
         if(couple != null)
         {
-            Player pet = event.getPlayer();
-            Entity mob = Bukkit.getEntity(couple.slime());
-            mob.teleport(pet.getLocation().add(0.0D, 1.0D, 0.0D));
+            teleportSlimeToPet(couple.pet(), couple.slime());
         }
     }
 
     @EventHandler
-    public void onPlayerDeathEvent(PlayerDeathEvent event)
+    public void onPlayersMoveInVehicleEvent(VehicleMoveEvent event)
+    {
+        List<Entity> passengers = event.getVehicle().getPassengers();
+        List<Player> playersInVehicle = passengers.stream().
+                filter(x -> x instanceof Player).map(x -> (Player)x).toList();
+        List<CoupleIds> couplesOfPetsInVehicle = playersInVehicle.stream()
+                .map(x -> couplesIds.stream().filter(y -> y.pet().equals(x.getName())).findFirst().orElse(null))
+                .filter(x -> x != null).toList();
+
+        for(CoupleIds couple : couplesOfPetsInVehicle)
+        {
+            teleportSlimeToPet(couple.pet(), couple.slime());
+        }
+    }
+
+    @EventHandler
+    public void onOwnerDeathEvent(PlayerDeathEvent event)
     {
         List<CoupleIds> couples = couplesIds.stream().
                 filter(x -> x.owner().equals(event.getEntity().getPlayer().getName())).toList();
@@ -181,7 +224,7 @@ public class LeashingEvents implements Listener
     }
 
     @EventHandler
-    public void onPlayerQuitEvent(PlayerQuitEvent event)
+    public void onOwnerQuitEvent(PlayerQuitEvent event)
     {
         List<CoupleIds> couples = couplesIds.stream().
                 filter(x -> x.owner().equals(event.getPlayer().getName())).toList();
@@ -202,7 +245,47 @@ public class LeashingEvents implements Listener
         CoupleIds couple = couplesIds.stream().
                 filter(x -> x.pet().equals(event.getPlayer().getName())).findFirst().orElse(null);
         if(couple != null)
-            ((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(Bukkit.getPlayer(couple.owner()));
+        {
+            /*The need to wait 1 tick before starting all releashing routines is caused by a ridiculous bug
+            i have spent around 10 hours to fix.After a player joins a server or simply respawns, the game doesn't
+             manage to process it correctly as soon as it fires corresponding events.So you need to set up a delay
+             with duration of 1 tick and ONLY after that do what you wanted to do with the player.The other way is
+             undefined behaviour*/
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () ->
+            {
+                UUID newSlimeId = spawnDummyMobOnALeash(couple.owner(), couple.pet()).getUniqueId();
+                couplesIds.remove(couple);
+                couplesIds.add(new CoupleIds(couple.owner(), couple.pet(), newSlimeId));
+                plugin.getBoard().addTeam(couple.pet(), newSlimeId.toString());
+                Bukkit.getPlayer(couple.pet()).setScoreboard(plugin.getBoard().getBoard());
+            }, 1);
+            //((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(Bukkit.getPlayer(couple.owner()));
+        }
+    }
+
+    @EventHandler
+    public void onPetRespawnEvent(PlayerRespawnEvent event)
+    {
+        CoupleIds couple = couplesIds.stream().
+                filter(x -> x.pet().equals(event.getPlayer().getName())).findFirst().orElse(null);
+        if(couple != null)
+        {
+            /*The need to wait 1 tick before starting all releashing routines is caused by a ridiculous bug
+            i have spent around 10 hours to fix.After a player joins a server or simply respawns, the game doesn't
+             manage to process it correctly as soon as it fires corresponding events.So you need to set up a delay
+             with duration of 1 tick and ONLY after that do what you wanted to do with the player.The other way is
+             undefined behaviour*/
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () ->
+            {
+                UUID newSlimeId = spawnDummyMobOnALeash(couple.owner(), couple.pet()).getUniqueId();
+                couplesIds.remove(couple);
+                couplesIds.add(new CoupleIds(couple.owner(), couple.pet(), newSlimeId));
+                plugin.getBoard().addTeam(couple.pet(), newSlimeId.toString());
+                Bukkit.getPlayer(couple.pet()).setScoreboard(plugin.getBoard().getBoard());
+            }, 1);
+        }
     }
     @EventHandler
     public void onPetQuitEvent(PlayerQuitEvent event)
@@ -210,7 +293,21 @@ public class LeashingEvents implements Listener
         CoupleIds couple = couplesIds.stream().
                 filter(x -> x.pet().equals(event.getPlayer().getName())).findFirst().orElse(null);
         if(couple != null)
-            ((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(null);
+        {
+            safelyDespawnDummyMobOnALeash(couple.pet(), couple.slime());
+            //((LivingEntity)Bukkit.getEntity(couple.slime())).setLeashHolder(null);
+        }
+    }
+
+    @EventHandler
+    public void onPetDeathEvent(PlayerDeathEvent event)
+    {
+        CoupleIds couple = couplesIds.stream().
+                filter(x -> x.pet().equals(event.getPlayer().getName())).findFirst().orElse(null);
+        if(couple != null)
+        {
+            safelyDespawnDummyMobOnALeash(couple.pet(), couple.slime());
+        }
     }
 
     @EventHandler
@@ -227,6 +324,18 @@ public class LeashingEvents implements Listener
                 if (couple != null)
                     hangedPets.put(couple.pet(), event.getBlock().getLocation());
             }
+        }
+    }
+
+    @EventHandler
+    public void onLeashHitchBreakByPet(HangingBreakByEntityEvent event)
+    {
+        if(event.getEntity() instanceof LeashHitch)
+        {
+            CoupleIds couple = couplesIds.stream().
+                    filter(x -> x.pet().equals(event.getRemover().getName())).findFirst().orElse(null);
+            if(couple.pet() != null && hangedPets.containsKey(couple.pet()))
+                event.setCancelled(true);
         }
     }
 
@@ -268,7 +377,7 @@ public class LeashingEvents implements Listener
                 .filter(x -> x.slime().equals(event.getEntity().getUniqueId()))
                 .findFirst().orElse(null);
         if(couple != null)
-            if(couple.owner() != event.getPlayer().getName())
+            //if(couple.owner() != event.getPlayer().getName())
                 event.setCancelled(true);
     }
 }
@@ -277,30 +386,35 @@ public class LeashingEvents implements Listener
 
 class LeashMechanic extends BukkitRunnable
 {
-    private CoupleIds coupleToProcess;
+
+    private String ownerId;
+    private String petId;
     private List<CoupleIds> allCouples;
     private HashMap<String, Location> hangedPets;
 
-    LeashMechanic(List<CoupleIds> couples, HashMap<String, Location> hanged, CoupleIds couple)
+    LeashMechanic(List<CoupleIds> couples, HashMap<String, Location> hanged, String idOfOwner, String idOfPet)
     {
         hangedPets = hanged;
-        coupleToProcess = couple;
+        ownerId = idOfOwner;
+        petId = idOfPet;
         allCouples = couples;
     }
 
     @Override
     public void run()
     {
-        if (!allCouples.contains(coupleToProcess))
+
+        CoupleIds coupleToCheckExistence = allCouples.stream()
+                .filter(x -> x.pet().equals(petId) && x.owner().equals(ownerId)).findFirst().orElse(null);
+        if (coupleToCheckExistence == null)
             this.cancel();
 
-        Player owner = Bukkit.getPlayer(coupleToProcess.owner());
-        Player pet = Bukkit.getPlayer(coupleToProcess.pet());
-        Entity mob = Bukkit.getEntity(coupleToProcess.slime());
+        Player owner = Bukkit.getPlayer(ownerId);
+        Player pet = Bukkit.getPlayer(petId);
 
         Location bindingLocation =
-                hangedPets.containsKey(coupleToProcess.pet()) ?
-                        hangedPets.get(coupleToProcess.pet()) : owner.getLocation();
+                hangedPets.containsKey(petId) ?
+                        hangedPets.get(petId) : owner.getLocation();
 
         if (bindingLocation.distanceSquared(pet.getLocation()) > 10)
             pet.setVelocity(bindingLocation.toVector().subtract(
