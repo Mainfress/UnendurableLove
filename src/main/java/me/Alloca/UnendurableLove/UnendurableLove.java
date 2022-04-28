@@ -11,6 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,11 +30,15 @@ public class UnendurableLove extends JavaPlugin
     public void onEnable()
     {
         Instance = this;
+
+        Items.registerAllItems();
+
         board = new CollisionBoard();
         LeashEvents = new LeashingEvents(this);
         LabelEvents = new LabelingEvents();
         TalkingEvents = new TalkingEvents(this);
         Silencers = new PetSilencers(this);
+
 
         Bukkit.getPluginManager().registerEvents(LeashEvents, this);
         Bukkit.getPluginManager().registerEvents(LabelEvents, this);

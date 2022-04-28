@@ -1,5 +1,6 @@
 package me.Alloca.UnendurableLove.NoTalking;
 
+import me.Alloca.UnendurableLove.Items;
 import me.Alloca.UnendurableLove.UnendurableLove;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -29,82 +30,9 @@ public class PetSilencers implements Listener
 
     private Set<String> diedPetsNeedingToRespawnWithGag = new HashSet<String>();
 
-    private static final Material silencerMat = Material.LEATHER_HELMET;
-    private static final Material silencerKeyMat = Material.STICK;
-
     public PetSilencers(UnendurableLove plugin)
     {
         this.plugin = plugin;
-        registerAll();
-    }
-
-    private ItemStack getSilencerItemStack()
-    {
-        ItemStack result = new ItemStack(silencerMat, 1);
-        ItemMeta meta = result.getItemMeta();
-
-        meta.setCustomModelData(1984);
-        meta.setDisplayName("Simple Ballgag");
-        meta.setLore(List.of(ChatColor.GRAY + "No pet can talk while wearing this.",
-                ChatColor.GRAY + "*Maybe* it's only for the naughty ones..."));
-        result.setItemMeta(meta);
-        result.addEnchantment(Enchantment.BINDING_CURSE, 1);
-
-        return result;
-    }
-
-    private ItemStack getSilencerKeyItemStack()
-    {
-        ItemStack result = new ItemStack(silencerKeyMat, 1);
-        ItemMeta meta = result.getItemMeta();
-
-        meta.setCustomModelData(2984);
-        meta.setDisplayName("Ballgag Key");
-        meta.setLore(List.of(ChatColor.GRAY + "Right-click to let the bad pet talk again.",
-                ChatColor.GRAY + "Only use if you *really* need to."));
-        result.setItemMeta(meta);
-
-        return result;
-    }
-
-    private void registerRecipe(ItemStack item, String[] shape, Material[] ingredients)
-    {
-        ItemStack result = item;
-
-        ShapedRecipe recipe = new ShapedRecipe(
-                new NamespacedKey(UnendurableLove.Instance,
-                        "UnendurableLove" + item.getItemMeta().getCustomModelData()), result);
-        recipe.shape(shape);
-        for (int i = 0; i < ingredients.length; i++)
-        {
-            recipe.setIngredient((char) ('A' + i), ingredients[i]);
-        }
-
-        Bukkit.addRecipe(recipe);
-    }
-
-    public void registerAll()
-    {
-        // string-leather-string
-        registerRecipe(getSilencerItemStack(), new String[] { "ABA" },
-                new Material[] { Material.STRING, Material.LEATHER });
-        // iron-iron / empty-stick
-        registerRecipe(getSilencerKeyItemStack(), new String[]{ "AA", " B" },
-                new Material[]{ Material.IRON_INGOT, Material.STICK } );
-    }
-
-    public boolean isSilencer(Material material, ItemMeta meta)
-    {
-        return material == silencerMat &&
-                meta.getCustomModelData() == getSilencerItemStack().getItemMeta().getCustomModelData();
-    }
-
-    public boolean isKeyForSilencer(Material material, ItemMeta meta)
-    {
-        int a = meta.getCustomModelData();
-        int b = getSilencerKeyItemStack().getItemMeta().getCustomModelData();
-        return material == silencerKeyMat &&
-                meta.getCustomModelData() == getSilencerKeyItemStack().getItemMeta().getCustomModelData();
     }
 
     @EventHandler
@@ -117,7 +45,7 @@ public class PetSilencers implements Listener
 
         ItemStack handContent = owner.getInventory().getItemInMainHand();
 
-        if (isSilencer(handContent.getType(), handContent.getItemMeta()))
+        if (Items.AreItemTypesEqual(handContent, Items.getSilencerItemStack()))
         {
             if(plugin.TalkingEvents.isSilent(pet.getName()))
                 return;
@@ -136,7 +64,7 @@ public class PetSilencers implements Listener
         else
         {
             ItemStack helmet = pet.getInventory().getHelmet();
-            if (helmet != null && isKeyForSilencer(handContent.getType(), handContent.getItemMeta()))
+            if (helmet != null && Items.AreItemTypesEqual(handContent, Items.getSilencerKeyItemStack()))
             {
                 if (plugin.TalkingEvents.tryLetSpeak(owner, pet.getName()))
                 {
@@ -176,7 +104,7 @@ public class PetSilencers implements Listener
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () ->
             {
                 Player petPlayer = event.getPlayer();
-                petPlayer.getInventory().setHelmet(getSilencerItemStack());
+                petPlayer.getInventory().setHelmet(Items.getSilencerItemStack());
                 diedPetsNeedingToRespawnWithGag.remove(pet);
             },1);
         }
