@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.MessageFormat;
+import java.util.List;
 
 public class UnendurableLove extends JavaPlugin
 {
@@ -43,6 +44,8 @@ public class UnendurableLove extends JavaPlugin
         getCommand("unleash").setExecutor(new CommandUnleash());
         getCommand("chooseTag").setExecutor(new CommandChooseTag());
         getCommand("letSpeak").setExecutor(TalkingEvents);
+        getCommand("critUnleash").setExecutor(new CommandCritUnleash());
+
     }
 
     public CollisionBoard getBoard()
@@ -103,6 +106,25 @@ class CommandChooseTag implements CommandExecutor {
             }
         }
 
+        return true;
+    }
+}
+
+class CommandCritUnleash implements CommandExecutor
+{
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    {
+        if (sender instanceof Player)
+        {
+            List<CoupleIds> allCouples = UnendurableLove.Instance.LeashEvents.getCouplesIds();
+            for(CoupleIds couple : allCouples)
+                if(Bukkit.getEntity(couple.slime()) != null)
+                    Bukkit.getEntity(couple.slime()).remove();
+            UnendurableLove.Instance.LeashEvents.getCouplesIds().clear();
+            UnendurableLove.Instance.LeashEvents.getHangedPets().clear();
+        }
         return true;
     }
 }
