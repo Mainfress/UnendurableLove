@@ -27,6 +27,7 @@ public class UnendurableLove extends JavaPlugin
     public TalkingEvents TalkingEvents;
     public RidingEvents RidingEvents;
     public PetSilencers Silencers;
+    public ItemsEvents ItemsEvents;
     private CollisionBoard board;
     @Override
     public void onEnable()
@@ -41,6 +42,7 @@ public class UnendurableLove extends JavaPlugin
         TalkingEvents = new TalkingEvents(this);
         RidingEvents = new RidingEvents();
         Silencers = new PetSilencers(this);
+        ItemsEvents = new ItemsEvents();
 
 
         Bukkit.getPluginManager().registerEvents(LeashEvents, this);
@@ -48,6 +50,7 @@ public class UnendurableLove extends JavaPlugin
         Bukkit.getPluginManager().registerEvents(TalkingEvents, this);
         Bukkit.getPluginManager().registerEvents(Silencers, this);
         Bukkit.getPluginManager().registerEvents(RidingEvents, this);
+        Bukkit.getPluginManager().registerEvents(ItemsEvents,this);
         Bukkit.getLogger().info(ChatColor.GREEN + "sosi " + this.getName());
 
         getCommand("unleash").setExecutor(new CommandUnleash());

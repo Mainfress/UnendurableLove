@@ -13,13 +13,22 @@ import java.util.List;
 
 public class Items
 {
+
+    private static boolean isRecipeAlreadyLoaded(NamespacedKey key)
+    {
+        return Bukkit.getRecipe(key) != null;
+    }
+
     public static void registerRecipe(ItemStack item, String[] shape, Material[] ingredients)
     {
         ItemStack result = item;
+        String recipeName = "UnendurableLove" + item.getItemMeta().getCustomModelData();
+        NamespacedKey key = new NamespacedKey(UnendurableLove.Instance, recipeName);
 
-        ShapedRecipe recipe = new ShapedRecipe(
-                new NamespacedKey(UnendurableLove.Instance,
-                        "UnendurableLove" + item.getItemMeta().getCustomModelData()), result);
+        if(isRecipeAlreadyLoaded(key))
+            return;
+
+        ShapedRecipe recipe = new ShapedRecipe(key, result);
         recipe.shape(shape);
         for (int i = 0; i < ingredients.length; i++)
         {
@@ -58,6 +67,19 @@ public class Items
         return result;
     }
 
+    public static ItemStack getWhipItemStack()
+    {
+        ItemStack result = new ItemStack(Material.TWISTING_VINES, 1);
+        ItemMeta meta = result.getItemMeta();
+
+        meta.setCustomModelData(1985);
+        meta.setDisplayName("Twisted Whip");
+        meta.setLore(List.of(ChatColor.GRAY + "If your pet is too slow then kindly tell it about it"));
+        result.setItemMeta(meta);
+
+        return result;
+    }
+
     public static void registerAllItems()
     {
         // string-leather-string
@@ -66,6 +88,8 @@ public class Items
         // iron-iron / empty-stick
         registerRecipe(getSilencerKeyItemStack(), new String[]{ "AA", " B" },
                 new Material[]{ Material.IRON_INGOT, Material.STICK } );
+        registerRecipe(getWhipItemStack(), new String[]{"ABC"},
+                new Material[] {Material.TWISTING_VINES, Material.STRING, Material.STICK});
     }
 
     public static boolean AreItemTypesEqual(ItemStack item1, ItemStack item2)

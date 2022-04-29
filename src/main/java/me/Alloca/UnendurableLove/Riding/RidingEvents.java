@@ -1,11 +1,13 @@
 package me.Alloca.UnendurableLove.Riding;
 
+import me.Alloca.UnendurableLove.Items;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -36,6 +38,7 @@ public class RidingEvents implements Listener
                 tenHoursInTicks, 1, false, false);
         stealthInvisibility.apply(pad);
 
+        pad.setSize(0);
         pad.setAI(false);
         pad.setGravity(false);
         pad.setInvulnerable(true);
@@ -67,6 +70,31 @@ public class RidingEvents implements Listener
                 //mount.hidePlayer(owner);
                 owner.getInventory().getItemInMainHand().setAmount(owner.getInventory().getItemInMainHand().getAmount() - 1);
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerHitItsMountWithWhip(PlayerInteractEvent event)
+    {
+        if(event.getAction().isLeftClick())
+        {
+            ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();
+            Map.Entry<String, OwnerAndPadPair> pair = ridingCouples.entrySet().stream()
+                    .filter(x -> x.getValue().owner().equals(event.getPlayer().getName())).findFirst().orElse(null);
+
+            if(Items.AreItemTypesEqual(itemInHand, Items.getWhipItemStack()) && pair != null)
+            {
+                Player owner = event.getPlayer();
+                Player mount = Bukkit.getPlayer(pair.getKey());
+
+                owner.attack(mount);
+
+                PotionEffect whipEffectJump = new PotionEffect(PotionEffectType.JUMP, 10 * 20, 1, true, true);
+                PotionEffect whipEffectSpeed = new PotionEffect(PotionEffectType.SPEED, 10 * 20, 2, true, true);
+                mount.addPotionEffect(whipEffectJump);
+                mount.addPotionEffect(whipEffectSpeed);
+            }
+
         }
     }
 
@@ -110,6 +138,16 @@ public class RidingEvents implements Listener
                 ridingCouples.remove(mount.getName());
             }
         }
+    }
+
+    @EventHandler
+    public void onSomebodyTriesToInteractWithPad(PlayerInteractEntityEvent event)
+    {
+        Map.Entry<String,OwnerAndPadPair> pairToCheck = ridingCouples.entrySet().stream()
+                .filter(x -> x.getValue().pad().equals(event.getRightClicked().getUniqueId()))
+                .findFirst().orElse(null);
+        if(pairToCheck != null)
+            event.setCancelled(true);
     }
 
     /*public void onMountDeathEvent(PlayerDeathEvent event)
