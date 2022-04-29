@@ -33,6 +33,16 @@ Currently implemented:
   
     • The sympathetic owner who decided to permit his plaything to speak can craft a key with
     "iron-iron and a stick under right iron" pattern
+    
+ 4)Rides
+ 
+    • Finally make your pet useful by using it as a means of transportation
+    
+    • Curb it with a saddle and take a ride
+    
+    • It it's still not enough then whip it to make your disstressfull but devoted plaything to jump and run faster
+    
+    • Craft the Twisted Whip with a "twisting_vines-string-stick" pattern
   
   
 And most importantly, show someone how much you love them or make them show how much they love you ✨🖤
