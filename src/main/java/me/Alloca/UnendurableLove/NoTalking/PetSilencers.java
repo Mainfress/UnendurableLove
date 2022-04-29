@@ -1,5 +1,6 @@
 package me.Alloca.UnendurableLove.NoTalking;
 
+import me.Alloca.UnendurableLove.Items;
 import me.Alloca.UnendurableLove.UnendurableLove;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -152,7 +153,7 @@ public class PetSilencers implements Listener
 
         ItemStack handContent = owner.getInventory().getItemInMainHand();
 
-        if (isSilencer(handContent.getType(), handContent.getItemMeta()))
+        if (Items.AreItemTypesEqual(handContent, Items.getSilencerItemStack()))
         {
             if(plugin.TalkingEvents.isSilent(pet.getName()))
                 return;
