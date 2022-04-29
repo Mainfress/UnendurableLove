@@ -2,6 +2,7 @@ package me.Alloca.UnendurableLove.NoTalking;
 
 import me.Alloca.UnendurableLove.UnendurableLove;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -41,7 +42,11 @@ public class TalkingEvents implements Listener, CommandExecutor
     
     public boolean silence(String owner, String player)
     {
-        return silentWithOwners.putIfAbsent(player, owner) == null;
+        boolean ok = silentWithOwners.putIfAbsent(player, owner) == null;
+
+        Bukkit.getPluginManager().callEvent(new GagStateEvent(player, true));
+
+        return ok;
     }
 
     public boolean letSpeak(String owner, String player)
@@ -49,6 +54,7 @@ public class TalkingEvents implements Listener, CommandExecutor
         if (!silentWithOwners.getOrDefault(player, "").equals(owner))
             return false;
         silentWithOwners.remove(player);
+        Bukkit.getPluginManager().callEvent(new GagStateEvent(player, false));
         return true;
     }
 
