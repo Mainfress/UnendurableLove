@@ -123,7 +123,7 @@ public class LeashingEvents implements Listener
             }
             else
             {
-                if(coupleToCheck == null)
+                if(coupleToCheck == null || owner.getInventory().getItemInMainHand().getType() != Material.AIR)
                     return;
 
                 hangedPets.remove(pet.getName());
