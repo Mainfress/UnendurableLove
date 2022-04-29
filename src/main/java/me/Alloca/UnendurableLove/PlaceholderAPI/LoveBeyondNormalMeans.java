@@ -2,6 +2,7 @@ package me.Alloca.UnendurableLove.PlaceholderAPI;
 
 import me.Alloca.UnendurableLove.UnendurableLove;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +38,8 @@ public class LoveBeyondNormalMeans extends PlaceholderExpansion {
     public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
         if (params.equalsIgnoreCase("nametag")) {
             return plugin.LabelEvents.getTag(player);
+        } else if (params.equalsIgnoreCase("silent")) {
+            return ChatColor.GRAY + "*" + player.getName() + " tries to say something*";
         }
 
         return null;
