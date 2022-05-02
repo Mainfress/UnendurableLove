@@ -11,6 +11,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -73,6 +74,17 @@ public class PetSilencers implements Listener
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onBlockPlaceEvent(BlockPlaceEvent event)
+    {
+        ItemStack itemInHand = event.getItemInHand();
+
+        if (!Items.AreItemTypesEqual(itemInHand, Items.getSilencerItemStack()))
+            return;
+
+        event.setCancelled(true);
     }
 
     @EventHandler
