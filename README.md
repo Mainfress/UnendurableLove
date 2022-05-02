@@ -34,8 +34,8 @@ And most importantly, show someone how much you love them or make them show how 
 
 ## Recipes
 
-| Name           | Ingredients                            | Crafting Recipe
-| -------------- | -------------------------------------- | -
-| Simple Ballgag | String × 2 + <br>Leather               | ![](https://user-images.githubusercontent.com/60847190/166338168-bd5836c1-ec83-49fa-bd2d-222e9ccdf646.png)
-| Ballgag Key    | Iron Ingot × 2 + <br>Stick             | ![](https://user-images.githubusercontent.com/60847190/166338190-ccd07748-e310-4a5d-8a8c-66fb58314e63.png)
-| Twisted Whip   | Twisted Vines + <br>String + <br>Stick | ![](https://user-images.githubusercontent.com/60847190/166338215-b155b47e-bf01-42c6-9e31-13996b9dfa60.png)
+| Name           | Ingredients                             | Crafting Recipe
+| -------------- | --------------------------------------- | -
+| Simple Ballgag | String × 2 + <br>Leather                | ![](https://user-images.githubusercontent.com/60847190/166338168-bd5836c1-ec83-49fa-bd2d-222e9ccdf646.png)
+| Ballgag Key    | Iron Ingot × 2 + <br>Stick              | ![](https://user-images.githubusercontent.com/60847190/166338190-ccd07748-e310-4a5d-8a8c-66fb58314e63.png)
+| Twisted Whip   | Twisting Vines + <br>String + <br>Stick | ![](https://user-images.githubusercontent.com/60847190/166338215-b155b47e-bf01-42c6-9e31-13996b9dfa60.png)
