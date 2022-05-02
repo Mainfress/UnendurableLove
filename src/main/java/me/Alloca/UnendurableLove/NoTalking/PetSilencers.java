@@ -68,7 +68,7 @@ public class PetSilencers implements Listener
             {
                 if (plugin.TalkingEvents.tryLetSpeak(owner, pet.getName()))
                 {
-                    pet.getWorld().dropItemNaturally(pet.getLocation(), helmet);
+                    owner.getInventory().addItem(Items.getSilencerItemStack());
                     pet.getInventory().setHelmet(null); // take if off
                 }
             }

@@ -40,7 +40,7 @@ public class Items
 
     public static ItemStack getSilencerItemStack()
     {
-        ItemStack result = new ItemStack(Material.LEATHER_HELMET, 1);
+        ItemStack result = new ItemStack(Material.RED_STAINED_GLASS, 1);
         ItemMeta meta = result.getItemMeta();
 
         meta.setCustomModelData(1984);
@@ -48,7 +48,6 @@ public class Items
         meta.setLore(List.of(ChatColor.GRAY + "No pet can talk while wearing this.",
                 ChatColor.GRAY + "*Maybe* it's only for the naughty ones..."));
         result.setItemMeta(meta);
-        result.addEnchantment(Enchantment.BINDING_CURSE, 1);
 
         return result;
     }

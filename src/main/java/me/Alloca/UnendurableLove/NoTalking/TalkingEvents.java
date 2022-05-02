@@ -1,5 +1,6 @@
 package me.Alloca.UnendurableLove.NoTalking;
 
+import me.Alloca.UnendurableLove.Items;
 import me.Alloca.UnendurableLove.UnendurableLove;
 import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
@@ -9,7 +10,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -37,6 +41,15 @@ public class TalkingEvents implements Listener, CommandExecutor
                     event.getPlayer(),
                     Component.text(ChatColor.GRAY + "*" + player + " tries to say something*"));
         }
+    }
+
+    @EventHandler
+    public void onPetTryingToRemoveGag(InventoryClickEvent event)
+    {
+        if(silentWithOwners.containsKey(event.getWhoClicked().getName()))
+            if(event.getSlotType() == InventoryType.SlotType.ARMOR &&
+                Items.AreItemTypesEqual(Items.getSilencerItemStack(), event.getCurrentItem()))
+                    event.setCancelled(true);
     }
     
     public boolean silence(String owner, String player)
