@@ -19,11 +19,16 @@ repositories {
         name = 'mg-dev'
         url = 'https://ci.mg-dev.eu/plugin/repository/everything/'
     }
+    maven {
+        name = 'placeholderapi'
+        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
+    }
 }
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT'
     compileOnly 'com.bergerkiller.bukkit:BKCommonLib:1.18.2-v2-SNAPSHOT'
+    compileOnly 'me.clip:placeholderapi:2.11.1'
 }
 
 def targetJavaVersion = 17

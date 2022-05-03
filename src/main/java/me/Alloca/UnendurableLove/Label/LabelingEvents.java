@@ -119,4 +119,9 @@ public class LabelingEvents implements Listener
         ownersAndTagsTheyChose.remove(owner.getName());
     }
 
+    public String getTag(Player player) {
+        return tagsScoreboard.getTeams().stream()
+                .filter(x -> x.getName().equals(player.getName())).findFirst()
+                .map(Team::getPrefix).orElse("");
+    }
 }

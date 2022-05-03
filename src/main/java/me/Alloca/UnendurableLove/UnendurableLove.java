@@ -6,6 +6,7 @@ import me.Alloca.UnendurableLove.Leashes.CoupleIds;
 import me.Alloca.UnendurableLove.Leashes.LeashingEvents;
 import me.Alloca.UnendurableLove.NoTalking.PetSilencers;
 import me.Alloca.UnendurableLove.NoTalking.TalkingEvents;
+import me.Alloca.UnendurableLove.PlaceholderAPI.LoveBeyondNormalMeans;
 import me.Alloca.UnendurableLove.Riding.RidingEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -58,6 +59,9 @@ public class UnendurableLove extends JavaPlugin
         getCommand("letSpeak").setExecutor(TalkingEvents);
         getCommand("critUnleash").setExecutor(new CommandCritUnleash());
 
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new LoveBeyondNormalMeans(this).register();
+        }
     }
 
     public CollisionBoard getBoard()
