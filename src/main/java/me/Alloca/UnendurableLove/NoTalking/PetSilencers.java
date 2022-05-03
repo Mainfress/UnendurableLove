@@ -11,18 +11,17 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PetSilencers implements Listener
 {
@@ -68,11 +67,30 @@ public class PetSilencers implements Listener
             {
                 if (plugin.TalkingEvents.tryLetSpeak(owner, pet.getName()))
                 {
-                    owner.getInventory().addItem(Items.getSilencerItemStack());
+                    ItemStack silencerItem = Items.getSilencerItemStack();
+
+                    // try adding silencer item to owner's inventory
+                    Map<Integer, ItemStack> remainingItems = owner.getInventory().addItem(silencerItem);
+
+                    // just drop it on fail (e.g. no space available in inventory)
+                    if (!remainingItems.isEmpty())
+                        owner.getWorld().dropItemNaturally(owner.getLocation(), silencerItem);
+
                     pet.getInventory().setHelmet(null); // take if off
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onBlockPlaceEvent(BlockPlaceEvent event)
+    {
+        ItemStack itemInHand = event.getItemInHand();
+
+        if (!Items.AreItemTypesEqual(itemInHand, Items.getSilencerItemStack()))
+            return;
+
+        event.setCancelled(true);
     }
 
     @EventHandler
